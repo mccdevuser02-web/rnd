@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spinning Dodecahedron</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden;
+            background: #000;
+        }
+        canvas { 
+            display: block; 
+        }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Create scene
+        const scene = new THREE.Scene();
+        
+        // Create camera
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+        
+        // Create renderer
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+        
+        // Create dodecahedron geometry using custom approach
+        // We'll create a dodecahedron manually with 12 faces
+        const radius = 2;
+        const φ = (1 + Math.sqrt(5)) / 2; // Golden ratio
+        const vertices = [
+            [ 1, 1, 1], [ 1, 1, -1], [ 1, -1, 1], [ 1, -1, -1],
+            [-1, 1, 1], [-1, 1, -1], [-1, -1, 1], [-1, -1, -1],
+            [0, 1/φ, φ], [0, -1/φ, φ], [0, 1/φ, -φ], [0, -1/φ, -φ],
+            [1/φ, φ, 0], [-1/φ, φ, 0], [1/φ, -φ, 0], [-1/φ, -φ, 0],
+            [φ, 0, 1/φ], [φ, 0, -1/φ], [-φ, 0, 1/φ], [-φ, 0, -1/φ]
+        ];
+        
+
+        
+        // Create dodecahedron faces
+        const faces = [
+            [0, 8, 4, 12, 1], [1, 9, 5, 13, 0], [2, 10, 6, 14, 3],
+            [3, 11, 7, 15, 2], [4, 12, 16, 17, 5], [5, 17, 18, 19, 6],
+            [6, 19, 10, 11, 7], [7, 11, 15, 14, 8], [8, 14, 13, 12, 9],
+            [9, 13, 17, 16, 10], [10, 16, 19, 18, 11], [12, 15, 11, 10, 13]
+        ];
+        
+        // Create geometry from vertices and faces
+        const geometry = new THREE.BufferGeometry();
+        const positions = [];
+        const indices = [];
+        
+        // Convert vertices to position array
+        for (let i = 0; i < vertices.length; i++) {
+            positions.push(vertices[i][0] * radius, vertices[i][1] * radius, vertices[i][2] * radius);
+        }
+        
+        // Convert faces to indices - Fixed: create proper triangle indices
+        for (let i = 0; i < faces.length; i++) {
+            const face = faces[i];
+            // Create triangles from the pentagonal face
+            indices.push(face[0], face[1], face[2]);
+            indices.push(face[2], face[3], face[4]);
+        }
+        
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        geometry.setIndex(indices);
+        geometry.computeVertexNormals();
+        
+        // Create materials with different colors and shininess
+        const materials = [];
+        const colors = [
+            0xff0000, // Red
+            0x00ff00, // Green
+            0x0000ff, // Blue
+            0xffff00, // Yellow
+            0xff00ff, // Magenta
+            0x00ffff, // Cyan
+            0xffa500, // Orange
+            0x800080, // Purple
+            0xff1493, // Deep Pink
+            0x00ff7f, // Spring Green
+            0x4b0082, // Indigo
+            0xdc143c  // Crimson
+        ];
+        
+        for (let i = 0; i < 12; i++) {
+            materials.push(new THREE.MeshPhongMaterial({
+                color: colors[i],
+                shininess: 100,
+                specular: 0xffffff,
+                side: THREE.DoubleSide // Make sure both sides are visible
+            }));
+        }
+        
+        // Create dodecahedron mesh with multiple materials
+        const dodecahedron = new THREE.Mesh(geometry, materials);
+        scene.add(dodecahedron);
+        
+        // Add lights
+        const lightPositions = [
+            { x: 3, y: 3, z: 3 },
+            { x: -3, y: 3, z: 3 },
+            { x: 3, y: -3, z: 3 },
+            { x: -3, y: -3, z: 3 }
+        ];
+        
+        lightPositions.forEach(pos => {
+            const light = new THREE.PointLight(0xffffff, 1, 100);
+            light.position.set(pos.x, pos.y, pos.z);
+            scene.add(light);
+        });
+        
+        // Add ambient light for better visibility
+        const ambientLight = new THREE.AmbientLight(0x333333);
+        scene.add(ambientLight);
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Rotate dodecahedron
+            dodecahedron.rotation.x += 0.005;
+            dodecahedron.rotation.y += 0.005;
+            
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+    </script>
+</body>
+</html>
