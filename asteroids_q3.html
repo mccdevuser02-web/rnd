@@ -331,7 +331,7 @@
         // Update score and lives displays
         function updateDisplays() {
             scoreDisplay.textContent = `SCORE: ${score}`;
-            livesDisplay.textContent = `LIVES: ${lives}`;
+            livesDisplay.textContent = `SHIELDS: ${lives}`;
         }
 
         // Game loop
@@ -396,6 +396,14 @@
                         // Increase score
                         score += 100;
                         updateDisplays();
+                        
+                        // Check if all asteroids are destroyed
+                        if (asteroids.length === 0) {
+                            // Create new set of asteroids
+                            for (let k = 0; k < 5 + Math.floor(score / 500); k++) {
+                                createAsteroid();
+                            }
+                        }
                         break;
                     }
                 }
