@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Card QR Code Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .form-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        
+        .qr-container {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        
+        #qrcode {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .preview-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .preview-title {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .preview-content {
+            text-align: left;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .form-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Business Card QR Generator</h1>
+        <p class="subtitle">Create a QR code with your contact information</p>
+        
+        <div class="form-container">
+            <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" placeholder="John">
+            </div>
+            
+            <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" placeholder="Doe">
+            </div>
+            
+            <div class="form-group">
+                <label for="company">Company</label>
+                <input type="text" id="company" placeholder="Acme Inc.">
+            </div>
+            
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" id="title" placeholder="Software Engineer">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="john.doe@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" placeholder="(123) 456-7890">
+            </div>
+            
+            <div class="form-group">
+                <label for="website">Website</label>
+                <input type="url" id="website" placeholder="https://example.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="linkedin">LinkedIn</label>
+                <input type="url" id="linkedin" placeholder="https://linkedin.com/in/johndoe">
+            </div>
+        </div>
+        
+        <button id="generateBtn" class="btn">Generate QR Code</button>
+        
+        <div class="qr-container">
+            <div id="qrcode"></div>
+        </div>
+        
+        <button id="downloadBtn" class="btn" disabled>Download QR Code</button>
+        
+        <div class="preview-section">
+            <h3 class="preview-title">Generated vCard Content</h3>
+            <div class="preview-content" id="previewContent">Your vCard content will appear here</div>
+        </div>
+    </div>
+
+    <script>
+        let qrCode = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generateBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const previewContent = document.getElementById('previewContent');
+            
+            generateBtn.addEventListener('click', generateQRCode);
+            downloadBtn.addEventListener('click', downloadQRCode);
+            
+            // Generate initial QR code with sample data
+            generateQRCode();
+        });
+        
+        function generateQRCode() {
+            // Get form values
+            const firstName = document.getElementById('firstName').value || 'John';
+            const lastName = document.getElementById('lastName').value || 'Doe';
+            const company = document.getElementById('company').value || 'Company';
+            const title = document.getElementById('title').value || 'Title';
+            const email = document.getElementById('email').value || 'john.doe@example.com';
+            const phone = document.getElementById('phone').value || '(123) 456-7890';
+            const website = document.getElementById('website').value || 'https://example.com';
+            const linkedin = document.getElementById('linkedin').value || 'https://linkedin.com/in/johndoe';
+            
+            // Create vCard content
+            const vCard = `BEGIN:VCARD
+VERSION:3.0
+N:${lastName};${firstName};;;
+FN:${firstName} ${lastName}
+ORG:${company}
+TITLE:${title}
+EMAIL:${email}
+TEL:${phone}
+URL:${website}
+URL:${linkedin}
+END:VCARD`;
+            
+            // Update preview
+            previewContent.textContent = vCard;
+            
+            // Clear previous QR code
+            const qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = '';
+            
+            // Generate new QR code
+            qrCode = new QRCode(qrcodeDiv, {
+                text: vCard,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            // Enable download button
+            document.getElementById('downloadBtn').disabled = false;
+        }
+        
+        function downloadQRCode() {
+            if (!qrCode) return;
+            
+            const canvas = document.querySelector('#qrcode canvas');
+            if (!canvas) return;
+            
+            const link = document.createElement('a');
+            link.download = 'business-card-qr-code.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
