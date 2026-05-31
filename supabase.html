@@ -1,198 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fish And Chips Reviews</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fish And Chips Reviews</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            padding: 40px;
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-        .container {
-            background: white;
-            width: 600px;
-            padding: 24px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.1);
-        }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
 
-        h1 {
-            margin-top: 0;
-        }
+    .container {
+      width: 100%;
+      max-width: 700px;
+      background: white;
+      padding: 24px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
 
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            margin-bottom: 12px;
-        }
+    h1 {
+      margin-top: 0;
+    }
 
-        .buttons {
-            display: flex;
-            gap: 10px;
-        }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
 
-        button {
-            padding: 10px 16px;
-            cursor: pointer;
-        }
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
 
-        #status {
-            margin-top: 12px;
-            color: #555;
-        }
+    button {
+      padding: 10px 16px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #fff;
+    }
 
-        #reviews {
-            margin-top: 20px;
-        }
+    button:hover {
+      background: #f0f0f0;
+    }
 
-        .review {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }
+    #status {
+      margin-bottom: 16px;
+      color: #555;
+    }
 
-        .timestamp {
-            font-size: 12px;
-            color: #777;
-            margin-top: 4px;
-        }
-    </style>
+    .review {
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .review:last-child {
+      border-bottom: none;
+    }
+
+    .timestamp {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #777;
+    }
+
+    .review-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Fish And Chips Reviews</h1>
+  <div class="container">
+    <h1>Fish And Chips Reviews</h1>
 
-        <input
-            id="reviewInput"
-            type="text"
-            placeholder="Enter your review"
-        >
+    <input
+      id="reviewInput"
+      type="text"
+      placeholder="Enter your review"
+    >
 
-        <div class="buttons">
-            <button id="submitBtn">Submit Review</button>
-            <button id="retrieveBtn">Retrieve Reviews</button>
-        </div>
-
-        <div id="status"></div>
-
-        <div id="reviews"></div>
+    <div class="buttons">
+      <button id="submitBtn">Submit Review</button>
+      <button id="retrieveBtn">Retrieve Reviews</button>
     </div>
 
-    <script>
-        const SUPABASE_URL =
-            'https://aiwudktjenvnzlltmddt.supabase.co';
+    <div id="status"></div>
 
-        const SUPABASE_KEY =
-            'sb_publishable_LxcvAcLef6_WUsPgDZT1-w_hRepa7bY';
+    <div id="reviews"></div>
+  </div>
 
-        const supabase = window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_KEY
-        );
+  <script>
+    const SUPABASE_URL =
+      'https://aiwudktjenvnzlltmddt.supabase.co';
 
-        async function submitReview() {
-            const input = document.getElementById('reviewInput');
-            const status = document.getElementById('status');
+    const SUPABASE_ANON_KEY =
+      'sb_publishable_LxcvAcLef6_WUsPgDZT1-w_hRepa7bY';
 
-            const review = input.value.trim();
+    // Avoid naming this variable "supabase"
+    // because the CDN exposes window.supabase globally.
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
 
-            if (!review) {
-                status.textContent = 'Please enter a review.';
-                return;
+    const reviewInput = document.getElementById('reviewInput');
+    const statusDiv = document.getElementById('status');
+    const reviewsDiv = document.getElementById('reviews');
+
+    function setStatus(message) {
+      statusDiv.textContent = message;
+    }
+
+    async function submitReview() {
+      const review = reviewInput.value.trim();
+
+      if (!review) {
+        setStatus('Please enter a review.');
+        return;
+      }
+
+      setStatus('Saving review...');
+
+      try {
+        const { error } = await supabaseClient
+          .from('FishAndChips')
+          .insert([
+            {
+              review: review
             }
+          ]);
 
-            status.textContent = 'Saving...';
-
-            const { error } = await supabase
-                .from('FishAndChips')
-                .insert([
-                    {
-                        review: review
-                    }
-                ]);
-
-            if (error) {
-                status.textContent =
-                    'Error: ' + error.message;
-                return;
-            }
-
-            status.textContent = 'Review saved.';
-            input.value = '';
+        if (error) {
+          throw error;
         }
 
-        async function retrieveReviews() {
-            const reviewsDiv =
-                document.getElementById('reviews');
+        reviewInput.value = '';
+        setStatus('Review saved successfully.');
 
-            const status =
-                document.getElementById('status');
+        await retrieveReviews();
+      } catch (err) {
+        console.error(err);
+        setStatus('Error saving review: ' + err.message);
+      }
+    }
 
-            status.textContent = 'Loading reviews...';
+    async function retrieveReviews() {
+      setStatus('Loading reviews...');
 
-            const { data, error } = await supabase
-                .from('FishAndChips')
-                .select('id, created_at, review')
-                .order('created_at', {
-                    ascending: false
-                })
-                .limit(10);
+      try {
+        const { data, error } = await supabaseClient
+          .from('FishAndChips')
+          .select('id, created_at, review')
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-            if (error) {
-                status.textContent =
-                    'Error: ' + error.message;
-                return;
-            }
-
-            reviewsDiv.innerHTML = '';
-
-            if (!data || data.length === 0) {
-                reviewsDiv.innerHTML =
-                    '<p>No reviews found.</p>';
-                status.textContent = '';
-                return;
-            }
-
-            data.forEach(row => {
-                const div = document.createElement('div');
-                div.className = 'review';
-
-                div.innerHTML = `
-                    <div>${escapeHtml(row.review)}</div>
-                    <div class="timestamp">
-                        ${new Date(row.created_at).toLocaleString()}
-                    </div>
-                `;
-
-                reviewsDiv.appendChild(div);
-            });
-
-            status.textContent = '';
+        if (error) {
+          throw error;
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        reviewsDiv.innerHTML = '';
+
+        if (!data || data.length === 0) {
+          reviewsDiv.innerHTML = '<p>No reviews found.</p>';
+          setStatus('');
+          return;
         }
 
-        document
-            .getElementById('submitBtn')
-            .addEventListener('click', submitReview);
+        data.forEach(row => {
+          const reviewElement = document.createElement('div');
+          reviewElement.className = 'review';
 
-        document
-            .getElementById('retrieveBtn')
-            .addEventListener('click', retrieveReviews);
+          const textElement = document.createElement('div');
+          textElement.className = 'review-text';
+          textElement.textContent = row.review || '';
 
-        retrieveReviews();
-    </script>
+          const timestampElement = document.createElement('div');
+          timestampElement.className = 'timestamp';
+
+          if (row.created_at) {
+            timestampElement.textContent =
+              new Date(row.created_at).toLocaleString();
+          }
+
+          reviewElement.appendChild(textElement);
+          reviewElement.appendChild(timestampElement);
+
+          reviewsDiv.appendChild(reviewElement);
+        });
+
+        setStatus('');
+      } catch (err) {
+        console.error(err);
+        setStatus('Error retrieving reviews: ' + err.message);
+      }
+    }
+
+    document
+      .getElementById('submitBtn')
+      .addEventListener('click', submitReview);
+
+    document
+      .getElementById('retrieveBtn')
+      .addEventListener('click', retrieveReviews);
+
+    // Load reviews on page startup
+    retrieveReviews();
+  </script>
 </body>
 </html>
