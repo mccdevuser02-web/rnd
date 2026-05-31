@@ -23,7 +23,7 @@
 
     .container {
       width: 100%;
-      max-width: 700px;
+      max-width: 800px;
       background: white;
       padding: 24px;
       border-radius: 10px;
@@ -52,11 +52,22 @@
       cursor: pointer;
       border: 1px solid #ccc;
       border-radius: 4px;
-      background: #fff;
+      background: white;
     }
 
     button:hover {
       background: #f0f0f0;
+    }
+
+    .delete-btn {
+      background: #d9534f;
+      color: white;
+      border: none;
+      margin-top: 10px;
+    }
+
+    .delete-btn:hover {
+      background: #c9302c;
     }
 
     #status {
@@ -65,7 +76,7 @@
     }
 
     .review {
-      padding: 12px;
+      padding: 14px;
       border-bottom: 1px solid #e0e0e0;
     }
 
@@ -73,15 +84,26 @@
       border-bottom: none;
     }
 
+    .review-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 16px;
+    }
+
     .timestamp {
-      margin-top: 6px;
+      margin-top: 8px;
       font-size: 12px;
       color: #777;
     }
 
-    .review-text {
-      white-space: pre-wrap;
-      word-break: break-word;
+    .review-id {
+      font-size: 11px;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    .actions {
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -97,7 +119,7 @@
 
     <div class="buttons">
       <button id="submitBtn">Submit Review</button>
-      <button id="retrieveBtn">Retrieve Reviews</button>
+      <button id="retrieveBtn">Refresh Reviews</button>
     </div>
 
     <div id="status"></div>
@@ -113,7 +135,6 @@
       'sb_publishable_LxcvAcLef6_WUsPgDZT1-w_hRepa7bY';
 
     // Avoid naming this variable "supabase"
-    // because the CDN exposes window.supabase globally.
     const supabaseClient = window.supabase.createClient(
       SUPABASE_URL,
       SUPABASE_ANON_KEY
@@ -154,9 +175,41 @@
         setStatus('Review saved successfully.');
 
         await retrieveReviews();
+
       } catch (err) {
         console.error(err);
         setStatus('Error saving review: ' + err.message);
+      }
+    }
+
+    async function deleteReview(id) {
+      const confirmed = confirm(
+        `Delete review #${id}?`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      setStatus('Deleting review...');
+
+      try {
+        const { error } = await supabaseClient
+          .from('FishAndChips')
+          .delete()
+          .eq('id', id);
+
+        if (error) {
+          throw error;
+        }
+
+        setStatus('Review deleted.');
+
+        await retrieveReviews();
+
+      } catch (err) {
+        console.error(err);
+        setStatus('Error deleting review: ' + err.message);
       }
     }
 
@@ -167,8 +220,10 @@
         const { data, error } = await supabaseClient
           .from('FishAndChips')
           .select('id, created_at, review')
-          .order('created_at', { ascending: false })
-          .limit(10);
+          .order('created_at', {
+            ascending: false
+          })
+          .limit(50);
 
         if (error) {
           throw error;
@@ -177,37 +232,68 @@
         reviewsDiv.innerHTML = '';
 
         if (!data || data.length === 0) {
-          reviewsDiv.innerHTML = '<p>No reviews found.</p>';
+          reviewsDiv.innerHTML =
+            '<p>No reviews found.</p>';
           setStatus('');
           return;
         }
 
         data.forEach(row => {
-          const reviewElement = document.createElement('div');
-          reviewElement.className = 'review';
+          const reviewDiv = document.createElement('div');
+          reviewDiv.className = 'review';
 
-          const textElement = document.createElement('div');
-          textElement.className = 'review-text';
-          textElement.textContent = row.review || '';
+          const textDiv = document.createElement('div');
+          textDiv.className = 'review-text';
+          textDiv.textContent = row.review || '';
 
-          const timestampElement = document.createElement('div');
-          timestampElement.className = 'timestamp';
+          const timestampDiv =
+            document.createElement('div');
+          timestampDiv.className = 'timestamp';
 
           if (row.created_at) {
-            timestampElement.textContent =
-              new Date(row.created_at).toLocaleString();
+            timestampDiv.textContent =
+              new Date(row.created_at)
+                .toLocaleString();
           }
 
-          reviewElement.appendChild(textElement);
-          reviewElement.appendChild(timestampElement);
+          const idDiv =
+            document.createElement('div');
+          idDiv.className = 'review-id';
+          idDiv.textContent = 'ID: ' + row.id;
 
-          reviewsDiv.appendChild(reviewElement);
+          const actionsDiv =
+            document.createElement('div');
+          actionsDiv.className = 'actions';
+
+          const deleteBtn =
+            document.createElement('button');
+
+          deleteBtn.className = 'delete-btn';
+          deleteBtn.textContent = 'Delete';
+
+          deleteBtn.addEventListener(
+            'click',
+            () => deleteReview(row.id)
+          );
+
+          actionsDiv.appendChild(deleteBtn);
+
+          reviewDiv.appendChild(textDiv);
+          reviewDiv.appendChild(timestampDiv);
+          reviewDiv.appendChild(idDiv);
+          reviewDiv.appendChild(actionsDiv);
+
+          reviewsDiv.appendChild(reviewDiv);
         });
 
         setStatus('');
+
       } catch (err) {
         console.error(err);
-        setStatus('Error retrieving reviews: ' + err.message);
+        setStatus(
+          'Error retrieving reviews: ' +
+          err.message
+        );
       }
     }
 
@@ -219,7 +305,13 @@
       .getElementById('retrieveBtn')
       .addEventListener('click', retrieveReviews);
 
-    // Load reviews on page startup
+    reviewInput.addEventListener('keypress', e => {
+      if (e.key === 'Enter') {
+        submitReview();
+      }
+    });
+
+    // Load reviews when page opens
     retrieveReviews();
   </script>
 </body>
