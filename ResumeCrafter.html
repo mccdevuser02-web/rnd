@@ -611,6 +611,32 @@ footer .wrap{display:flex;align-items:center;justify-content:space-between;gap:1
     </div>
   </section>
 
+  <!-- ======================= Action bar ======================= -->
+  <section class="card actionbar">
+    <div class="ab-left">
+      <span class="model-chip">
+        <span class="mdot" id="modelDot"></span>
+        <span>Model</span>
+        <code id="modelChip">Local model</code>
+      </span>
+      <span class="prompt-est" id="promptEst">~0 tokens · context 65,536</span>
+    </div>
+    <div class="ab-right">
+      <button class="btn-primary" id="btnGenerate" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+        Generate
+      </button>
+      <button class="btn-ghost" id="btnInterview" type="button" title="Copy a prompt for interactive voice interview tools like unmute.sh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        Copy Interview Prompt
+      </button>
+      <button class="btn-danger" id="btnStop" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+        Stop
+      </button>
+    </div>
+  </section>
+
   <!-- ======================= Results ======================= -->
   <section class="results">
     <div class="res-head">
@@ -691,31 +717,6 @@ footer .wrap{display:flex;align-items:center;justify-content:space-between;gap:1
       </div>
     </div>
 
-    <!-- ======================= Action bar ======================= -->
-    <section class="card actionbar">
-      <div class="ab-left">
-        <span class="model-chip">
-          <span class="mdot" id="modelDot"></span>
-          <span>Model</span>
-          <code id="modelChip">Local model</code>
-        </span>
-        <span class="prompt-est" id="promptEst">~0 tokens · context 65,536</span>
-      </div>
-      <div class="ab-right">
-        <button class="btn-primary" id="btnGenerate" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
-          Generate
-        </button>
-        <button class="btn-ghost" id="btnInterview" type="button" title="Copy a prompt for interactive voice interview tools like unmute.sh">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
-          Copy Interview Prompt
-        </button>
-        <button class="btn-danger" id="btnStop" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
-          Stop
-        </button>
-      </div>
-    </section>
   </section>
 </main>
 
@@ -796,7 +797,9 @@ footer .wrap{display:flex;align-items:center;justify-content:space-between;gap:1
 const $ = s => document.querySelector(s);
 
 /* ---------------- The exact prompt ---------------- */
-const PROMPT_TEMPLATE = `Using my current resume, write a modern one-page ATS-compatible resume that is custom for this job description. Provide a short professional summary at the top. List relevant positions in full then summarize the remaining companies in one entry. Do not add skills that aren't already listed in the original resume. Collect relevant skills in their own section as a single compact, comma-delimited list to save space. Then, write a matching cover letter. Finally list 30 interview questions relevant to this role and potential answers. Provide no explanation or preamble. Make no comments after.
+const PROMPT_TEMPLATE = `Using my current resume, write a modern one-page ATS-compatible resume that is custom for this job description. Provide a short professional summary at the top. List only the relevant positions in full then summarize the remaining companies in one entry. Collect relevant skills in their own section as a single compact, comma-delimited list to save space. Then, write a matching cover letter. Finally list 30 interview questions relevant to this role and potential answers. 
+
+Do not add skills that aren't already listed in the original resume. Provide no explanation or preamble. Make no comments after. Do not think too long because you have very limited context.
 
 Respond in plain text, using exactly this structure, with the three parts back-to-back in this order and no labels or separators between them:
 
@@ -805,16 +808,14 @@ Part 1 — Resume
 2. Section headings are exactly these words, each alone on its own line, in Title Case: Professional Summary, Experience, Skills, Education.
 3. Bullet points start with the single character • (bullet symbol) followed by a space.
 4. One blank line between blocks.
-5. No markdown at all: no #, no *, no _, no backticks, no tables, no code fences.
 
 Part 2 — Cover Letter
 1. The single heading line "Cover Letter" immediately after the resume.
-2. Plain paragraphs separated by one blank line. No markdown.
+2. Plain paragraphs separated by one blank line.
 
 Part 3 — Interview Q&A
 1. The single heading line "Interview Questions" immediately after the letter.
 2. Exactly 30 items. Each item is two lines: "1. <question>" on its own line, then "Answer: <answer>". Number the items 1 to 30. One blank line between items.
-3. No markdown.
 
 <resume>
 ${'${resume}'}
